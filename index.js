@@ -8,7 +8,7 @@ app.get('/api/data', async function(req, res) {
     const url = decodeURIComponent(req.query.url);
     
     try {
-        console.log(`${Date.now()} - requisição iniciada`);
+        console.log(`requisição iniciada`);
         await scrapper.navegar(url);
         const data = await scrapper.getData();
         res.send({
@@ -23,4 +23,4 @@ app.get('/api/data', async function(req, res) {
 });
 
 app.listen(port);
-console.log(`${Date.now()} - Server started`);
+console.log(`Server started`);

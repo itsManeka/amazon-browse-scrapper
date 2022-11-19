@@ -23,31 +23,27 @@ module.exports = {
     },
 
     async getData() {
-        console.log(`${Date.now()} - getData - inicio`);
+        console.log(`getData - inicio`);
         const retorno = {};
-
         
-        console.log(`${Date.now()} - busca oferta relampago`);
+        console.log(`busca oferta relampago`);
         retorno['relampago'] = await this.getOfertaRelampago();
-
         
-        console.log(`${Date.now()} - busca desconto tela pagamento`);
+        console.log(`busca desconto tela pagamento`);
         retorno['promocao'] = await this.getPromocao();
 
-        console.log(`${Date.now()} - busca cupom`);
+        console.log(`busca cupom`);
         retorno['cupom'] = await this.getCupomDesconto();
 
-        console.log(`${Date.now()} - busca cupom destacavel`);
+        console.log(`busca cupom destacavel`);
         retorno['destacavel'] = await this.getCupomDescontoDestacavel();
 
-        console.log(`${Date.now()} - retorno`);
+        console.log(`retorno`);
         return retorno;
     },
 
     async getOfertaRelampago() {
         const retorno = {};
-
-        retorno['val'] = 0.00;
 
         try {
             const ofertaRelampago = await browser.getOfertaRelampago();
@@ -64,9 +60,6 @@ module.exports = {
 
     async getPromocao() {
         const retorno = {}
-
-        retorno['pct'] = 0.00;
-        retorno['val'] = 0.00;
 
         try {
             const promocaoSite = await browser.getPromocao();
@@ -89,10 +82,6 @@ module.exports = {
 
     async getCupomDesconto() {
         const retorno = {}
-
-        retorno['pct'] = 0.00;
-        retorno['val'] = 0.00;
-        retorno['nome'] = '';
 
         try {
             const cupomDesconto = await browser.getCupomDesconto();
@@ -120,10 +109,6 @@ module.exports = {
 
     async getCupomDescontoDestacavel() {
         const retorno = {}
-
-        retorno['pct'] = 0.00;
-        retorno['val'] = 0.00;
-        retorno['nome'] = '';
 
         try {
             const cupomDesconto = await browser.getCupomDescontoDestacavel();
