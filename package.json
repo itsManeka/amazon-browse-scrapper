@@ -1,0 +1,15 @@
+{
+  "name": "amazon-browse-scrapper",
+  "version": "1.0.0",
+  "description": "Get data from amazon products using puppeteer",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "puppeteer": "^19.2.2"
+  }
+}
