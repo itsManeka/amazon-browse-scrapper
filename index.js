@@ -6,7 +6,7 @@ const port = 8080;
 
 app.get('/api/data', async function(req, res) {
     const url = decodeURIComponent(req.query.url);
-
+    
     try {
         await scrapper.navegar(url);
         const data = await scrapper.getData();
@@ -16,7 +16,7 @@ app.get('/api/data', async function(req, res) {
 
     } catch (err) {
         res.send({
-            'erro': err
+            'erro': err.message
         })
     }
 });
