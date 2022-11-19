@@ -7,11 +7,13 @@ class Browser {
     }
 
     async init() {
+        console.log(`${Date.now()} - iniciando`);
         this.browser = await puppeteer.launch();
         this.page = await this.browser.newPage();
     }
 
     async navigate(url) {
+        console.log(`${Date.now()} - navegando para a página`);
         await this.page.goto(url);
     }
 

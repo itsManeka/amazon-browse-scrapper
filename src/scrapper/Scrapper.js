@@ -23,13 +23,24 @@ module.exports = {
     },
 
     async getData() {
+        console.log(`${Date.now()} - getData - inicio`);
         const retorno = {};
 
+        
+        console.log(`${Date.now()} - busca oferta relampago`);
         retorno['relampago'] = await this.getOfertaRelampago();
+
+        
+        console.log(`${Date.now()} - busca desconto tela pagamento`);
         retorno['promocao'] = await this.getPromocao();
+
+        console.log(`${Date.now()} - busca cupom`);
         retorno['cupom'] = await this.getCupomDesconto();
+
+        console.log(`${Date.now()} - busca cupom destacavel`);
         retorno['destacavel'] = await this.getCupomDescontoDestacavel();
 
+        console.log(`${Date.now()} - retorno`);
         return retorno;
     },
 
