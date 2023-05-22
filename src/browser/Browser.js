@@ -10,8 +10,8 @@ class Browser {
     async init() {
         console.log(`iniciando`);
         this.browser = await puppeteer.launch();
-        this.context = await this.browser.createIncognitoBrowserContext();
-        this.page = await this.context.newPage();
+        //this.context = await this.browser.createIncognitoBrowserContext();
+        this.page = await this.browser.newPage();
     }
 
     async navigate(url) {
@@ -47,6 +47,7 @@ class Browser {
 
     async getPromocao() {
         try {
+            console.log('checando promocoes')
             const promoMessageSelector = '#promoPriceBlockMessage_feature_div';
             const promocao = await this.page.evaluate(promoMessageSelector => {
                 var promoMessage = document.querySelector(promoMessageSelector);
@@ -57,6 +58,8 @@ class Browser {
                     }
                 }
             }, promoMessageSelector);
+             
+            console.log('promocao: ' + promocao)
 
             if (promocao != "" && promocao != undefined) {
                 return promocao;
@@ -120,7 +123,7 @@ class Browser {
         try {
             var texto = "";
             var link = "";
-
+            console.log('check promo: antes de pegar o texto')
             const labelSelector = '[id*="promoMessagepctch"]';
             texto = await this.page.evaluate(labelSelector => {
                 var elementoPromo = document.querySelector(labelSelector);
@@ -130,6 +133,7 @@ class Browser {
                 return "";
             }, labelSelector);
 
+            console.log('check promo: antes de pegar o link')
             link = await this.page.evaluate(labelSelector => {
                 var elementoPromo = document.querySelector(labelSelector);
                 if (elementoPromo) {
@@ -143,6 +147,8 @@ class Browser {
                 return "";
             }, labelSelector);
 
+            console.log('texto: ' +texto)
+            console.log('link: ' +link)
             if (texto == undefined) {
                 texto = "";
             }

@@ -141,7 +141,9 @@ module.exports = {
         const retorno = {}
 
         try {
+            console.log("check promotion");
             const promocao = await browser.checkPromo();
+            console.log(promocao)
 
             var texto = "";
             var link = "";
