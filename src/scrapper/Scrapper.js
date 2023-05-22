@@ -23,6 +23,8 @@ module.exports = {
     },
 
     async getData() {
+        console.log(browser.page.url);
+
         console.log(`getData - inicio`);
         const retorno = {};
         
