@@ -3,13 +3,15 @@ const puppeteer = require('puppeteer');
 class Browser {
     constructor() {
         this.browser = null;
+        this.context = null;
         this.page = null;
     }
 
     async init() {
         console.log(`iniciando`);
         this.browser = await puppeteer.launch();
-        this.page = await this.browser.newPage();
+        this.context = await this.browser.createIncognitoBrowserContext();
+        this.page = await this.context.newPage();
     }
 
     async navigate(url) {
@@ -112,6 +114,48 @@ class Browser {
         }
 
         return '';
+    }
+
+    async checkPromo() {
+        try {
+            var texto = "";
+            var link = "";
+
+            const labelSelector = '[id*="promoMessagepctch"]';
+            texto = await this.page.evaluate(labelSelector => {
+                var elementoPromo = document.querySelector(labelSelector);
+                if (elementoPromo) {
+                    return elementoPromo.innerText.trim();
+                }
+                return "";
+            }, labelSelector);
+
+            link = await this.page.evaluate(labelSelector => {
+                var elementoPromo = document.querySelector(labelSelector);
+                if (elementoPromo) {
+                    elementoPromo = elementoPromo.getElementsByTagName('a');
+                    if (elementoPromo) {
+                        if (elementoPromo.length > 0) {
+                            return elementoPromo.item(0).baseURI.trim();
+                        }
+                    }
+                }
+                return "";
+            }, labelSelector);
+
+            if (texto == undefined) {
+                texto = "";
+            }
+
+            if (link == undefined) {
+                link = "";
+            }
+
+            return [texto, link];
+        } catch (err) {
+            console.log(`Erro ao ler promocao: ${err.message}`);
+            return ['', ''];
+        }
     }
 }
 

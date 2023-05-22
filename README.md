@@ -26,7 +26,11 @@ Retorno:
       "pct": 0,
       "val": 0,
       "nome": ""
-    }
+    },
+    "promocoes": {
+      "texto": "",
+      "link": ""
+    },
   }
 }
 ```
@@ -38,3 +42,6 @@ Obs.:
 "val: Valor da promoção (Se houver)
 
 "nome": Nome do cupom (Se houver)
+
+"promocoes"->"texto": Resumo da promocao
+"promocoes"->"link": link das promocoes

@@ -38,6 +38,9 @@ module.exports = {
         console.log(`busca cupom destacavel`);
         retorno['destacavel'] = await this.getCupomDescontoDestacavel();
 
+        console.log('busca promocoes');
+        retorno['promocoes'] = await this.getPromo();
+
         console.log(`retorno`);
         return retorno;
     },
@@ -130,6 +133,30 @@ module.exports = {
         }
 
         return retorno;
+    },
+
+    async getPromo() {
+        const retorno = {}
+
+        try {
+            const promocao = await browser.checkPromo();
+
+            var texto = "";
+            var link = "";
+            if (promocao) {
+                texto = promocao[0];
+                link = promocao[1];
+            }
+
+            if (texto != "" && link != "") {
+                retorno['texto'] = texto;
+                retorno['link'] = link;
+            }
+            
+            return retorno;
+        } catch (err) {
+            console.log(`erro ao ler promocoes: ${err.message}`);
+        }
     }
 
 }
