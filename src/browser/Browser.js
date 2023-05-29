@@ -10,8 +10,8 @@ class Browser {
     async init() {
         console.log(`iniciando`);
         this.browser = await puppeteer.launch();
-        //this.context = await this.browser.createIncognitoBrowserContext();
-        this.page = await this.browser.newPage();
+        this.context = await this.browser.createIncognitoBrowserContext();
+        this.page = await this.context.newPage();
     }
 
     async navigate(url) {
@@ -58,8 +58,6 @@ class Browser {
                     }
                 }
             }, promoMessageSelector);
-             
-            console.log('promocao: ' + promocao)
 
             if (promocao != "" && promocao != undefined) {
                 return promocao;

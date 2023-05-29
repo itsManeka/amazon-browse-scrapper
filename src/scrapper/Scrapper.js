@@ -23,8 +23,6 @@ module.exports = {
     },
 
     async getData() {
-        console.log(browser.page.url());
-
         console.log(`getData - inicio`);
         const retorno = {};
         
@@ -141,9 +139,7 @@ module.exports = {
         const retorno = {}
 
         try {
-            console.log("check promotion");
             const promocao = await browser.checkPromo();
-            console.log(promocao)
 
             var texto = "";
             var link = "";
