@@ -9,7 +9,7 @@ class Browser {
 
     async init() {
         console.log(`iniciando`);
-        this.browser = await puppeteer.launch({headkess: true});
+        this.browser = await puppeteer.launch({headkess: "new"});
         this.context = await this.browser.createIncognitoBrowserContext();
         this.page = await this.context.newPage();
     }
