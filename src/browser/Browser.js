@@ -9,7 +9,7 @@ class Browser {
 
     async init() {
         console.log(`iniciando`);
-        this.browser = await puppeteer.launch({headkess: "new"});
+        this.browser = await puppeteer.launch();
         this.context = await this.browser.createIncognitoBrowserContext();
         this.page = await this.context.newPage();
     }
@@ -72,14 +72,11 @@ class Browser {
 
     async getCupomDesconto() {
         try {
-            const cupomListSelector = '#applicable_promotion_list_sec';
+            const cupomListSelector = '#promoPriceBlockMessage_feature_div';
             const cupom = await this.page.evaluate(cupomListSelector => {
                 var cupomMessage = document.querySelector(cupomListSelector);
                 if (cupomMessage) {
-                    var cupomContent = cupomMessage.querySelector('.apl_message');
-                    if (cupomContent) {
-                        return cupomContent.textContent.trim();
-                    }
+                    return cupomMessage.textContent.trim();
                 }
             }, cupomListSelector);
 
@@ -122,7 +119,7 @@ class Browser {
             var texto = "";
             var link = "";
             console.log('check promo: antes de pegar o texto')
-            const labelSelector = '[id*="promoMessagepctch"]';
+            const labelSelector = '[id*="promoMessageCXCWpctch"]';
             texto = await this.page.evaluate(labelSelector => {
                 var elementoPromo = document.querySelector(labelSelector);
                 if (elementoPromo) {

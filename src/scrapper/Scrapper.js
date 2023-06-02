@@ -2,12 +2,12 @@ const Browser = require('../browser/Browser');
 
 const browser = new Browser();
 
-var reOfertaRelampago = new RegExp('([0-9,\.]+)');
-var reNomeCupom = new RegExp('promocional ([a-zA-Z0-9]+) ');
-var reValorCupom = new RegExp('^R\\$([0-9,]+)');
-var rePctCupom = new RegExp('^([0-9]+)%');
-var rePctCupomAplicavel = new RegExp(' ([0-9,]+)%');
-var reValCupomAplicavel = new RegExp(' R\\$([0-9,]+)');
+var reOfertaRelampago = new RegExp('R\\$([0-9,]+)');
+var reNomeCupom = new RegExp(': ([a-zA-Z0-9]+)([ ]+)Comprar itens');
+var reValorCupom = new RegExp('Salve o cupom  R\\$([0-9,]+)');
+var rePctCupom = new RegExp('Salve o cupom ([0-9]+)%');
+var rePctCupomAplicavel = new RegExp('Aplicar Cupom de ([0-9,]+)%');
+var reValCupomAplicavel = new RegExp('Aplicar Cupom de R\\$([0-9,]+)');
 var reValPromocaoSite = new RegExp('R\\$[^0-9]([0-9,]+)');
 var aplPctPromocaoSite = new RegExp(' ([0-9,]+)%');
 
@@ -88,10 +88,10 @@ module.exports = {
 
         try {
             const cupomDesconto = await browser.getCupomDesconto();
-
+            
             var result = cupomDesconto.match(reNomeCupom);
             if (result) {
-                retorno['nome'] = parseFloat(result[1]);
+                retorno['nome'] = result[1];
             }
             
             var result = cupomDesconto.match(reValorCupom);
