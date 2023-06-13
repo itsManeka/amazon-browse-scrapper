@@ -106,6 +106,7 @@ module.exports = {
         }
     
         buscaConcluida = true;
+        inicializado = false;
         await browser.finaliza();
     },
 
