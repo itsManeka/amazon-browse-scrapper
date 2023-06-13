@@ -19,9 +19,77 @@ class Browser {
         await this.page.goto(url);
     }
 
+    async finaliza() {
+        await this.browser.close();
+    }
+
+    async navegaOfertaRelampago() {
+        try {
+            const selector = 'a[data-csa-c-element-id*="LIGHTNING_DEAL"]';
+            const botao = await this.page.waitForSelector(selector);
+            await botao.click();
+    
+            await this.page.waitForNavigation();
+        } catch (e) {
+            console.log('erro navegando para ofertas relampago' + e.message);
+        }
+    }
+
+    async buscaLinksRelampago() {
+        var data;
+
+        try {
+            const selector = "a[class*='linkOutlineOffset']";
+            await this.page.waitForSelector(selector);
+            data = await this.page.evaluate(selector => {
+                var data = {};
+                data.links = [];
+                data.continua = true;
+
+                document.querySelectorAll(selector).forEach(element => {
+                    next = element.nextElementSibling;
+                    botaoSeguirOferta = next.querySelector("span[aria-label='Seguir oferta']");
+                    if (botaoSeguirOferta) {
+                        data.continua = false;
+                        return;
+                    } else {
+                        data.links.push(element.href);
+                    }
+                });
+                return data;                
+            }, selector);
+        } catch (e) {
+            console.log('Erro buscando links relampago: ' + e.message);
+        }
+
+        return data;
+    }
+
+    async proximaPaginaRelampago() {
+        try {
+            const selector = 'li[class="a-last"]';
+            const proximaPagina = await this.page.waitForSelector(selector);
+            if (proximaPagina) {
+                const botaoProximaPagina = await proximaPagina.waitForSelector('a');
+                if (botaoProximaPagina) {
+                    await botaoProximaPagina.click();
+                    await this.page.waitForNavigation();
+                    return true;
+                }
+            }
+        } catch (e) {
+            console.log('erro navegando para ofertas relampago' + e.message);
+        }
+
+        return false;
+    }
+
     async getOfertaRelampago() {
+        const data = {};
+        
         try {
             const quadroSelector = '#dealsAccordionCaption_feature_div';
+
             const ofertaRelampago = await this.page.evaluate(quadroSelector => {
                 var label = document.querySelector(quadroSelector);
                 if (label) {
@@ -35,7 +103,21 @@ class Browser {
             }, quadroSelector);
 
             if (ofertaRelampago != "" && ofertaRelampago != undefined) {
-                return ofertaRelampago;
+                data.preco = ofertaRelampago;
+
+                const departamentoSelector = 'a[class="a-link-normal a-color-tertiary"]';
+                const departamento = await this.page.evaluate(departamentoSelector => {
+                    var elemento = document.querySelector(departamentoSelector);
+                    if (elemento) {
+                        return elemento.textContent.trim();
+                    }
+                }, departamentoSelector);
+
+                if (departamento != "" && departamento != undefined) {
+                    data.departamento = departamento;
+                }
+
+                return data;
             }
         } catch (err) {
             console.log(`Erro ao ler cupom relampago: ${err.message}`);

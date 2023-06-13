@@ -10,11 +10,14 @@ var rePctCupomAplicavel = new RegExp('Aplicar Cupom de ([0-9,]+)%');
 var reValCupomAplicavel = new RegExp('Aplicar Cupom de R\\$([0-9,]+)');
 var reValPromocaoSite = new RegExp('R\\$[^0-9]([0-9,]+)');
 var aplPctPromocaoSite = new RegExp(' ([0-9,]+)%');
+var reCodigoProduto = new RegExp('\\/([a-zA-Z0-9]+)\\?');
 
 var inicializado = false;
+var ofertas = [];
+var buscaConcluida = true;
 
 module.exports = {
-    async navegar(url) {
+    async navegar(url) {    
         if (!inicializado) {
             await browser.init();
             inicializado = true;
@@ -45,14 +48,85 @@ module.exports = {
         return retorno;
     },
 
+    async navegaPaginas(links, temMaisPagina) {
+        const data = await browser.buscaLinksRelampago();
+        if (data) {
+            links = links.concat(data.links);
+            if (data.continua) {
+                if (temMaisPagina) {
+                    temManavegaPaginasisPagina = await browser.proximaPaginaRelampago();
+                    links = await this.navegaPaginas(links, temMaisPagina);
+                }
+            }
+        }
+        return links;
+    },
+
+    async buscaOfertasRelampago() {
+        buscaConcluida = false;
+
+        var links = [];
+        
+        try {
+  
+            if (!inicializado) {
+                await browser.init();
+                inicializado = true;
+            }
+            
+            await browser.navigate('https://www.amazon.com.br/deals');
+
+            await browser.navegaOfertaRelampago();
+
+            links = await this.navegaPaginas(links, true);
+        
+            ofertas = [];
+
+            for (const link of links) {
+                const oferta = {};
+                await browser.navigate(link);
+    
+                const data = await browser.getOfertaRelampago();
+                if (data.preco) {
+                    const valor = data.preco.match(reOfertaRelampago);
+    
+                    if (valor) {
+                        const codigo = link.match(reCodigoProduto);
+    
+                        oferta.valor = parseFloat(valor[1].replace(',', '.'));
+                        oferta.codigo = codigo[1];
+                        oferta.departamento = data.departamento;
+    
+                        ofertas.push(oferta);
+                    }
+                }
+            }
+        } catch (err) {
+            console.log('erro navegando para os links das ofertas relâmpago: ' + err.message);
+        }
+    
+        buscaConcluida = true;
+        await browser.finaliza();
+    },
+
+    async isBuscaConcluida() {
+        return buscaConcluida;
+    },
+
+    async getDataBuscaRelampago() {
+        return ofertas;
+    },
+
     async getOfertaRelampago() {
         const retorno = {};
 
         try {
-            const ofertaRelampago = await browser.getOfertaRelampago();
-            const result = ofertaRelampago.match(reOfertaRelampago);
-            if (result) {
-                retorno['val'] = parseFloat(result[1].replace(',', '.'));
+            const data = await browser.getOfertaRelampago();
+            if (data.preco) {
+                const result = data.preco.match(reOfertaRelampago);
+                if (result) {
+                    retorno['val'] = parseFloat(result[1].replace(',', '.'));
+                }
             }
         } catch (err) {
             console.log(`erro ao ler oferta relampago: ${err.message}`);
