@@ -16,6 +16,8 @@ var inicializado = false;
 var ofertas = [];
 var buscaConcluida = true;
 
+const delay=(ms)=>new Promise(resolve=>setTimeout(resolve,ms));
+
 module.exports = {
     async navegar(url) {    
         if (!inicializado) {
@@ -62,6 +64,28 @@ module.exports = {
         return links;
     },
 
+    async buscaOfertasRelampagoLink(link) {
+        const oferta = {};
+        const codigo = link.match(reCodigoProduto)[1];
+
+        await browser.navigate(`https://www.amazon.com.br/dp/${codigo}`);
+
+        const data = await browser.getOfertaRelampago();
+        if (data.preco) {
+            const valor = data.preco.match(reOfertaRelampago);
+
+            if (valor) {
+                oferta.valor = parseFloat(valor[1].replace(',', '.'));
+                oferta.codigo = codigo;
+                oferta.departamento = data.departamento;
+
+                return oferta;
+            }
+        }
+
+        return undefined;
+    },
+
     async buscaOfertasRelampago() {
         buscaConcluida = false;
 
@@ -83,22 +107,16 @@ module.exports = {
             ofertas = [];
 
             for (const link of links) {
-                const oferta = {};
-                const codigo = link.match(reCodigoProduto)[1];
-
-                await browser.navigate(`https://www.amazon.com.br/dp/${codigo}`);
-    
-                const data = await browser.getOfertaRelampago(true);
-                if (data.preco) {
-                    const valor = data.preco.match(reOfertaRelampago);
-    
-                    if (valor) {
-                        oferta.valor = parseFloat(valor[1].replace(',', '.'));
-                        oferta.codigo = codigo;
-                        oferta.departamento = data.departamento;
-    
-                        ofertas.push(oferta);
-                    }
+                result = await this.buscaOfertasRelampagoLink(link);
+                if (result !== undefined) {
+                    ofertas.push(result);
+                } else {
+                    // tenta de novo (?) o aws da umas loqueada sei la
+                    delay(500);
+                    result = await this.buscaOfertasRelampagoLink(link);
+                    if (result !== undefined) {
+                        ofertas.push(result);
+                    }   
                 }
             }
         } catch (err) {
@@ -122,7 +140,7 @@ module.exports = {
         const retorno = {};
 
         try {
-            const data = await browser.getOfertaRelampago(false);
+            const data = await browser.getOfertaRelampago();
             if (data.preco) {
                 const result = data.preco.match(reOfertaRelampago);
                 if (result) {

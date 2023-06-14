@@ -1,7 +1,5 @@
 const puppeteer = require('puppeteer');
 
-const delay=(ms)=>new Promise(resolve=>setTimeout(resolve,ms));
-
 class Browser {
     constructor() {
         this.browser = null;
@@ -23,7 +21,6 @@ class Browser {
     async navigate(url) {
         console.log(`navegando para a página: ${url}`);
         await this.page.goto(url);
-        await delay(1000);
     }
 
     async finaliza() {
@@ -91,15 +88,11 @@ class Browser {
         return false;
     }
 
-    async getOfertaRelampago(waitSelector) {
+    async getOfertaRelampago() {
         const data = {};
         
         try {
             const quadroSelector = '#dealsAccordionCaption_feature_div';
-
-            if (waitSelector) {
-                await this.page.waitForSelector(quadroSelector);
-            }
 
             const ofertaRelampago = await this.page.evaluate(quadroSelector => {
                 var label = document.querySelector(quadroSelector);

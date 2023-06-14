@@ -40,17 +40,11 @@ app.get('/api/buscarelampago/results', async function(req, res) {
     try {
         console.log('verifica se concluiu');
         const concluida = await scrapper.isBuscaConcluida();
-        if (concluida) {
-            const data = await scrapper.getDataBuscaRelampago();
-            res.send({
-                'concluida': concluida,
-                'data': data
-            })
-        } else {
-            res.send({
-                'data': concluida
-            })
-        }
+        const data = await scrapper.getDataBuscaRelampago();
+        res.send({
+            'concluida': concluida,
+            'data': data
+        })
     } catch (err) {
         res.send({
             'erro': err.message
