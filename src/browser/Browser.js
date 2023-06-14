@@ -1,5 +1,7 @@
 const puppeteer = require('puppeteer');
 
+const delay=(ms)=>new Promise(resolve=>setTimeout(resolve,ms));
+
 class Browser {
     constructor() {
         this.browser = null;
@@ -19,8 +21,9 @@ class Browser {
     }
 
     async navigate(url) {
-        console.log(`navegando para a página`);
+        console.log(`navegando para a página: ${url}`);
         await this.page.goto(url);
+        await delay(1000);
     }
 
     async finaliza() {
@@ -129,11 +132,6 @@ class Browser {
             }
         } catch (err) {
             console.log(`Erro ao ler oferta relampago: ${err.message}`);
-            console.log('conteudo página:\n\n');
-            const html = await this.page.content();
-            console.log(html);
-            console.log('\n\n');
-            return '';
         }
 
         return '';
