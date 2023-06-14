@@ -86,7 +86,7 @@ module.exports = {
                 const oferta = {};
                 await browser.navigate(link);
     
-                const data = await browser.getOfertaRelampago();
+                const data = await browser.getOfertaRelampago(true);
                 if (data.preco) {
                     const valor = data.preco.match(reOfertaRelampago);
     
@@ -122,7 +122,7 @@ module.exports = {
         const retorno = {};
 
         try {
-            const data = await browser.getOfertaRelampago();
+            const data = await browser.getOfertaRelampago(false);
             if (data.preco) {
                 const result = data.preco.match(reOfertaRelampago);
                 if (result) {

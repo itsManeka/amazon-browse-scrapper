@@ -84,11 +84,15 @@ class Browser {
         return false;
     }
 
-    async getOfertaRelampago() {
+    async getOfertaRelampago(waitSelector) {
         const data = {};
         
         try {
             const quadroSelector = '#dealsAccordionCaption_feature_div';
+
+            if (waitSelector) {
+                await this.page.waitForSelector(quadroSelector);
+            }
 
             const ofertaRelampago = await this.page.evaluate(quadroSelector => {
                 var label = document.querySelector(quadroSelector);
