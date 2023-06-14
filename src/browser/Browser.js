@@ -27,6 +27,19 @@ class Browser {
         await this.browser.close();
     }
 
+    async isPaginaCachorro() {
+        const selector = '#d';
+        const retorno = await this.page.evaluate(selector => {
+            var cachorro = document.querySelector(selector);
+            if (cachorro) {
+                return true;
+            }
+            return false;
+        }, selector);
+
+        return retorno;
+    }
+
     async navegaOfertaRelampago() {
         try {
             const selector = 'a[data-csa-c-element-id*="LIGHTNING_DEAL"]';
@@ -34,9 +47,13 @@ class Browser {
             await botao.click();
     
             await this.page.waitForNavigation();
+
+            return true;
         } catch (e) {
-            console.log('erro navegando para ofertas relampago' + e.message);
+            console.log('erro navegando para ofertas relâmpago: ' + e.message);
         }
+
+        return false;
     }
 
     async buscaLinksRelampago() {
@@ -82,7 +99,7 @@ class Browser {
                 }
             }
         } catch (e) {
-            console.log('erro navegando para ofertas relampago' + e.message);
+            console.log('erro navegando para próxima página relâmpago: ' + e.message);
         }
 
         return false;

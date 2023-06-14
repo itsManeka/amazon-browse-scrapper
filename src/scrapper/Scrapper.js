@@ -25,6 +25,14 @@ module.exports = {
             inicializado = true;
         }
         await browser.navigate(url);
+
+        //-- Caso caia em uma página não encontrada (foto de cachorro) tenta de novo.
+        //-- Comportamento implementado devido ao mal comportamento na aws
+        const isPaginaCachorro = await browser.isPaginaCachorro();
+        if (isPaginaCachorro) {
+            await delay(500);
+            await browser.navigate(url);
+        }
     },
 
     async getData() {
@@ -100,23 +108,25 @@ module.exports = {
             
             await browser.navigate('https://www.amazon.com.br/deals');
 
-            await browser.navegaOfertaRelampago();
+            const navegou = await browser.navegaOfertaRelampago();
 
-            links = await this.navegaPaginas(links, true);
-        
-            ofertas = [];
+            if (navegou) {
+                links = await this.navegaPaginas(links, true);
+            
+                ofertas = [];
 
-            for (const link of links) {
-                result = await this.buscaOfertasRelampagoLink(link);
-                if (result !== undefined) {
-                    ofertas.push(result);
-                } else {
-                    // tenta de novo (?) o aws da umas loqueada sei la
-                    delay(500);
+                for (const link of links) {
                     result = await this.buscaOfertasRelampagoLink(link);
                     if (result !== undefined) {
                         ofertas.push(result);
-                    }   
+                    } else {
+                        // tenta de novo (?) o aws da umas loqueada sei la
+                        delay(500);
+                        result = await this.buscaOfertasRelampagoLink(link);
+                        if (result !== undefined) {
+                            ofertas.push(result);
+                        }   
+                    }
                 }
             }
         } catch (err) {
