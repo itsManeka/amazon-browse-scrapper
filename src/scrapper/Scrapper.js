@@ -84,17 +84,17 @@ module.exports = {
 
             for (const link of links) {
                 const oferta = {};
-                await browser.navigate(link);
+                const codigo = link.match(reCodigoProduto)[1];
+
+                await browser.navigate(`https://www.amazon.com.br/dp/${codigo}`);
     
                 const data = await browser.getOfertaRelampago(true);
                 if (data.preco) {
                     const valor = data.preco.match(reOfertaRelampago);
     
                     if (valor) {
-                        const codigo = link.match(reCodigoProduto);
-    
                         oferta.valor = parseFloat(valor[1].replace(',', '.'));
-                        oferta.codigo = codigo[1];
+                        oferta.codigo = codigo;
                         oferta.departamento = data.departamento;
     
                         ofertas.push(oferta);
