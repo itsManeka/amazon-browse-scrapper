@@ -7,6 +7,10 @@ class Browser {
         this.page = null;
     }
 
+    async getPage() {
+        return this.page;
+    }
+
     async init() {
         console.log(`iniciando`);
         this.browser = await puppeteer.launch();
@@ -124,7 +128,11 @@ class Browser {
                 return data;
             }
         } catch (err) {
-            console.log(`Erro ao ler cupom relampago: ${err.message}`);
+            console.log(`Erro ao ler oferta relampago: ${err.message}`);
+            console.log('conteudo página:\n\n');
+            const html = await this.page.content();
+            console.log(html);
+            console.log('\n\n');
             return '';
         }
 
