@@ -174,7 +174,7 @@ class Browser {
 
     async getCupomDesconto() {
         try {
-            const cupomListSelector = '#promoPriceBlockMessage_feature_div';
+            const cupomListSelector = 'span[id*="promoMessageCXCWpctch"]';
             const cupom = await this.page.evaluate(cupomListSelector => {
                 var cupomMessage = document.querySelector(cupomListSelector);
                 if (cupomMessage) {

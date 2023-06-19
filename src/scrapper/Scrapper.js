@@ -3,7 +3,7 @@ const Browser = require('../browser/Browser');
 const browser = new Browser();
 
 var reOfertaRelampago = new RegExp('R\\$([0-9,]+)');
-var reNomeCupom = new RegExp(': ([a-zA-Z0-9]+)([ ]+)Comprar itens');
+var reNomeCupom = new RegExp(': ([a-zA-Z0-9]+)[ ]');
 var reValorCupom = new RegExp('Salve o cupom  R\\$([0-9,]+)');
 var rePctCupom = new RegExp('Salve o cupom ([0-9]+)%');
 var rePctCupomAplicavel = new RegExp('Aplicar Cupom de ([0-9,]+)%');
