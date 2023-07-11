@@ -16,6 +16,9 @@ Retorno:
     "relampago": {
       "val": 0
     },
+    "primeday": {
+      "val": 0
+    },
     "promocao": {
       "pct": 3, 
       "val": 0 

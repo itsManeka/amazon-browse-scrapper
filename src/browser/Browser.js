@@ -147,6 +147,32 @@ class Browser {
         return '';
     }
 
+    async getOfertaPrimeDay() {
+        try {
+            const quadroSelector = '#dealsAccordionCaption_feature_div';
+
+            const ofertaPrime = await this.page.evaluate(quadroSelector => {
+                var label = document.querySelector(quadroSelector);
+                if (label) {
+                    if (label.textContent.trim().includes('Oferta exclusiva Prime')) {
+                        var preco = label.nextElementSibling.querySelector('#corePrice_feature_div');
+                        if (preco) {
+                            return preco.textContent.trim();
+                        }
+                    }
+                }
+            }, quadroSelector);
+
+            if (ofertaPrime != "" && ofertaPrime != undefined) {
+                return ofertaPrime;
+            }
+        } catch (err) {
+            console.log(`Erro ao ler oferta primeday: ${err.message}`);
+        }
+
+        return '';
+    }
+
     async getPromocao() {
         try {
             console.log('checando promocoes')

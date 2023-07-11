@@ -2,7 +2,8 @@ const Browser = require('../browser/Browser');
 
 const browser = new Browser();
 
-var reOfertaRelampago = new RegExp('R\\$([0-9,]+)');
+var reOfertaPrimeDay = new RegExp('R\\$([0-9,.]+)');
+var reOfertaRelampago = new RegExp('R\\$([0-9,.]+)');
 var reNomeCupom = new RegExp(': ([a-zA-Z0-9]+)[ ]');
 var reValorCupom = new RegExp('Salve o cupom  R\\$([0-9,]+)');
 var rePctCupom = new RegExp('Salve o cupom ([0-9]+)%');
@@ -41,6 +42,9 @@ module.exports = {
         
         console.log(`busca oferta relampago`);
         retorno['relampago'] = await this.getOfertaRelampago();
+
+        console.log(`busca oferta primeday`);
+        retorno['primeday'] = await this.getOfertaPrimeDay();
         
         console.log(`busca desconto tela pagamento`);
         retorno['promocao'] = await this.getPromocao();
@@ -159,6 +163,24 @@ module.exports = {
             }
         } catch (err) {
             console.log(`erro ao ler oferta relampago: ${err.message}`);
+        }
+
+        return retorno;
+    },
+
+    async getOfertaPrimeDay() {
+        const retorno = {};
+
+        try {
+            const preco = await browser.getOfertaPrimeDay();
+            if (preco) {
+                const result = preco.match(reOfertaPrimeDay);
+                if (result) {
+                    retorno['val'] = parseFloat(result[1].replace(',', '.'));
+                }
+            }
+        } catch (err) {
+            console.log(`erro ao ler oferta primeday: ${err.message}`);
         }
 
         return retorno;
