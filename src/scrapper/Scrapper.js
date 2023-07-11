@@ -158,7 +158,7 @@ module.exports = {
             if (data.preco) {
                 const result = data.preco.match(reOfertaRelampago);
                 if (result) {
-                    retorno['val'] = parseFloat(result[1].replace(',', '.'));
+                    retorno['val'] = parseFloat(result[1].replace('.', '').replace(',', '.'));
                 }
             }
         } catch (err) {
@@ -176,7 +176,7 @@ module.exports = {
             if (preco) {
                 const result = preco.match(reOfertaPrimeDay);
                 if (result) {
-                    retorno['val'] = parseFloat(result[1].replace(',', '.'));
+                    retorno['val'] = parseFloat(result[1].replace('.', '').replace(',', '.'));
                 }
             }
         } catch (err) {
