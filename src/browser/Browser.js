@@ -154,7 +154,7 @@ class Browser {
             const ofertaPrime = await this.page.evaluate(quadroSelector => {
                 var label = document.querySelector(quadroSelector);
                 if (label) {
-                    if (label.textContent.trim().includes('Oferta exclusiva Prime')) {
+                    if (label.textContent.trim().toUpperCase().includes('OFERTA EXCLUSIVA PRIME')) {
                         var preco = label.nextElementSibling.querySelector('#corePrice_feature_div');
                         if (preco) {
                             return preco.textContent.trim();
