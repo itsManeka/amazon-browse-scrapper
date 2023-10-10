@@ -149,7 +149,7 @@ class Browser {
 
     async getOfertaPrimeDay() {
         try {
-            const quadroSelector = '#dealsAccordionCaption_feature_div';
+            const quadroSelector = '#dealsAccordionCaption_feature_div,#primeSavingsUpsellCaption_feature_div';
 
             const ofertaPrime = await this.page.evaluate(quadroSelector => {
                 var label = document.querySelector(quadroSelector);
