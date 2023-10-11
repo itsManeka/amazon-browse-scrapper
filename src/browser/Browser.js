@@ -175,9 +175,13 @@ class Browser {
 
     async getPromocao() {
         try {
+            var promocao = "";
+            var precoCheio = "";
+            var preco = "";
+
             console.log('checando promocoes')
             const promoMessageSelector = '#promoPriceBlockMessage_feature_div';
-            const promocao = await this.page.evaluate(promoMessageSelector => {
+            promocao = await this.page.evaluate(promoMessageSelector => {
                 var promoMessage = document.querySelector(promoMessageSelector);
                 if (promoMessage) {
                     var promoContent = promoMessage.querySelector('.a-alert-content');
@@ -187,9 +191,44 @@ class Browser {
                 }
             }, promoMessageSelector);
 
-            if (promocao != "" && promocao != undefined) {
-                return promocao;
+            console.log('check promo: antes de pegar o preco cheio')
+            const caixaComprasSelector = '#addToCart';
+            precoCheio = await this.page.evaluate(caixaComprasSelector => {
+                var elementoPromo = document.querySelector(caixaComprasSelector);
+                if (elementoPromo) {
+                    elementoPromo = elementoPromo.querySelector('#listPrice');
+                    if (elementoPromo) {
+                        return elementoPromo.innerText.trim();
+                    }
+                }
+                return "";
+            }, caixaComprasSelector);
+
+            console.log('check promo: antes de pegar o preco')
+            preco = await this.page.evaluate(caixaComprasSelector => {
+                var elementoPromo = document.querySelector(caixaComprasSelector);
+                if (elementoPromo) {
+                    elementoPromo = elementoPromo.querySelector('#price');
+                    if (elementoPromo) {
+                        return elementoPromo.innerText.trim();
+                    }
+                }
+                return "";
+            }, caixaComprasSelector);
+
+            if (preco == undefined) {
+                preco = "";
             }
+
+            if (precoCheio == undefined) {
+                precoCheio = preco;
+            }
+
+            if (promocao == undefined) {
+                promocao = "";
+            }
+
+            return [promocao, preco, precoCheio];
         } catch (err) {
             console.log(`Erro ao ler promocao: ${err.message}`);
             return '';
@@ -200,16 +239,33 @@ class Browser {
 
     async getCupomDesconto() {
         try {
+            var retorno = "";
+
             const cupomListSelector = 'span[id*="promoMessageCXCWpctch"]';
-            const cupom = await this.page.evaluate(cupomListSelector => {
+            var cupom = await this.page.evaluate(cupomListSelector => {
                 var cupomMessage = document.querySelector(cupomListSelector);
                 if (cupomMessage) {
-                    return cupomMessage.textContent.trim();
+                    return cupomMessage.innerText.trim();
                 }
             }, cupomListSelector);
 
+            const labelSelector = 'label[id*="couponBadgepctch"]';
+            var label = await this.page.evaluate(labelSelector => {
+                var cupomMessage = document.querySelector(labelSelector);
+                if (cupomMessage) {
+                    return cupomMessage.innerText.trim();
+                }
+            }, labelSelector);
+
             if (cupom != "" && cupom != undefined) {
-                return cupom;
+                retorno = cupom;
+
+                if (label != "" && label != undefined) {
+                    retorno = `${label}${retorno}`;
+                    console.log('retorno: ' + retorno);
+                }
+
+                return retorno;
             }
 
         } catch (err) {
@@ -245,15 +301,27 @@ class Browser {
     async checkPromo() {
         try {
             var texto = "";
+            var label = "";
             var link = "";
+            var precoCheio = "";
+            var preco = "";
+
             console.log('check promo: antes de pegar o texto')
-            const labelSelector = '[id*="promoMessageCXCWpctch"]';
-            texto = await this.page.evaluate(labelSelector => {
-                var elementoPromo = document.querySelector(labelSelector);
+            const promoSelector = '[id*="promoMessageCXCWpctch"]';
+            texto = await this.page.evaluate(promoSelector => {
+                var elementoPromo = document.querySelector(promoSelector);
                 if (elementoPromo) {
                     return elementoPromo.innerText.trim();
                 }
                 return "";
+            }, promoSelector);
+
+            const labelSelector = 'label[id*="couponBadgepctch"]';
+            label = await this.page.evaluate(labelSelector => {
+                var cupomMessage = document.querySelector(labelSelector);
+                if (cupomMessage) {
+                    return cupomMessage.innerText.trim();
+                }
             }, labelSelector);
 
             console.log('check promo: antes de pegar o link')
@@ -270,17 +338,60 @@ class Browser {
                 return "";
             }, labelSelector);
 
-            console.log('texto: ' +texto)
-            console.log('link: ' +link)
-            if (texto == undefined) {
+            console.log('texto: ' + texto);
+            console.log('link: ' + link);
+            console.log('label: ' + label);
+
+            if (label === undefined) {
+                label = "";
+            }
+
+            if (texto === undefined) {
                 texto = "";
             }
 
-            if (link == undefined) {
+            texto = `${label}  ${texto}`;
+
+            if (link === undefined) {
                 link = "";
             }
 
-            return [texto, link];
+            console.log('check promo: antes de pegar o preco cheio')
+            const caixaComprasSelector = '#addToCart';
+            precoCheio = await this.page.evaluate(caixaComprasSelector => {
+                var elementoPromo = document.querySelector(caixaComprasSelector);
+                if (elementoPromo) {
+                    elementoPromo = elementoPromo.querySelector('#listPrice');
+                    if (elementoPromo) {
+                        return elementoPromo.innerText.trim();
+                    }
+                }
+                return "";
+            }, caixaComprasSelector);
+
+            console.log('check promo: antes de pegar o preco')
+            preco = await this.page.evaluate(caixaComprasSelector => {
+                var elementoPromo = document.querySelector(caixaComprasSelector);
+                if (elementoPromo) {
+                    elementoPromo = elementoPromo.querySelector('#price');
+                    if (elementoPromo) {
+                        return elementoPromo.innerText.trim();
+                    }
+                }
+                return "";
+            }, caixaComprasSelector);
+
+            console.log('precoCheio: ' + precoCheio)
+            console.log('preco: ' + preco)
+            if (preco == undefined) {
+                preco = "";
+            }
+
+            if (precoCheio == undefined) {
+                precoCheio = preco;
+            }
+
+            return [texto, link, preco, precoCheio];
         } catch (err) {
             console.log(`Erro ao ler promocao: ${err.message}`);
             return ['', ''];

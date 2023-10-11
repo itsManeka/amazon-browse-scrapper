@@ -5,6 +5,7 @@ const browser = new Browser();
 var reOfertaPrimeDay = new RegExp('R\\$([0-9,.]+)');
 var reOfertaRelampago = new RegExp('R\\$([0-9,.]+)');
 var reNomeCupom = new RegExp(': ([a-zA-Z0-9]+)[ ]');
+var reNomeCupom2 = new RegExp('código ([a-zA-Z0-9]+)[ ]');
 var reValorCupom = new RegExp('Salve o cupom  R\\$([0-9,]+)');
 var rePctCupom = new RegExp('Salve o cupom ([0-9]+)%');
 var rePctCupomAplicavel = new RegExp('Aplicar Cupom de ([0-9,]+)%');
@@ -191,13 +192,33 @@ module.exports = {
 
         try {
             const promocaoSite = await browser.getPromocao();
+
+            var promocao = "";
+            var preco = "";
+            var precoCheio = "";
+
+            if (promocaoSite) {
+                promocao = promocaoSite[0];
+                preco = promocaoSite[1];
+                precoCheio = promocaoSite[2];
+            }
             
-            var result = promocaoSite.match(reValPromocaoSite);
+            var result = promocao.match(reValPromocaoSite);
             if (result) {
                 retorno['val'] = parseFloat(result[1].replace(',', '.'));
             }
             
-            var result = promocaoSite.match(aplPctPromocaoSite);
+            var result = preco.match(reValPromocaoSite);
+            if (result) {
+                retorno['preco'] = parseFloat(result[1].replace(',', '.'));
+            }
+            
+            var result = precoCheio.match(reValPromocaoSite);
+            if (result) {
+                retorno['precoCheio'] = parseFloat(result[1].replace(',', '.'));
+            }
+            
+            var result = promocao.match(aplPctPromocaoSite);
             if (result) {
                 retorno['pct'] = parseFloat(result[1].replace(',', '.'));
             }
@@ -217,16 +238,31 @@ module.exports = {
             var result = cupomDesconto.match(reNomeCupom);
             if (result) {
                 retorno['nome'] = result[1];
+            } else {
+                result = cupomDesconto.match(reNomeCupom2);
+                if (result) {
+                    retorno['nome'] = result[1];
+                }
             }
             
             var result = cupomDesconto.match(reValorCupom);
             if (result) {
                 retorno['val'] = parseFloat(result[1].replace(',', '.'));
+            } else {
+                result = cupomDesconto.match(reValPromocaoSite);
+                if (result) {
+                    retorno['val'] = parseFloat(result[1].replace(',', '.'));
+                }
             }
             
             var result = cupomDesconto.match(rePctCupom);
             if (result) {
                 retorno['pct'] = parseFloat(result[1].replace(',', '.'));
+            } else {
+                result = cupomDesconto.match(aplPctPromocaoSite);
+                if (result) {
+                    retorno['pct'] = result[1];
+                }
             }
         } catch (err) {
             console.log(`erro ao ler desconto: ${err.message}`);
@@ -268,14 +304,36 @@ module.exports = {
 
             var texto = "";
             var link = "";
+            var preco = "";
+            var precoCheio = "";
+
             if (promocao) {
                 texto = promocao[0];
                 link = promocao[1];
+                preco = promocao[2];
+                precoCheio = promocao[3];
             }
 
-            if (texto != "" && link != "") {
+            if (texto != "") {
                 retorno['texto'] = texto;
+            }
+
+            if (link != "") {
                 retorno['link'] = link;
+            }
+
+            if (precoCheio != "") {
+                var result = precoCheio.match(reValPromocaoSite);
+                if (result) {
+                    retorno['precoCheio'] = parseFloat(result[1].replace(',', '.'));
+                }
+            }
+
+            if (preco != "") {
+                var result = preco.match(reValPromocaoSite);
+                if (result) {
+                    retorno['preco'] = parseFloat(result[1].replace(',', '.'));
+                }
             }
             
             return retorno;
