@@ -12,14 +12,12 @@ class Browser {
     }
 
     async init() {
-        console.log(`iniciando`);
         this.browser = await puppeteer.launch();
         this.context = await this.browser.createIncognitoBrowserContext();
         this.page = await this.context.newPage();
     }
 
     async navigate(url) {
-        console.log(`navegando para a página: ${url}`);
         await this.page.goto(url);
     }
 
@@ -173,13 +171,122 @@ class Browser {
         return '';
     }
 
+    async getPrecoProduto() {
+        try {
+            var quadroSelector = ""; 
+            
+            quadroSelector = '#Ebooks-desktop-KINDLE_ALC-prices';
+            var preco = await this.page.evaluate(quadroSelector => {
+                const quadro = document.querySelector(quadroSelector);
+                if (quadro) {
+                    var preco = undefined;
+                    var precoCheio = undefined;
+
+                    const elementoPreco = quadro.querySelector('#kindle-price');
+                    const elementoPrecoCheio = quadro.querySelector('#basis-price');
+                    
+                    if (elementoPreco) { 
+                        preco = elementoPreco.innerText.trim(); 
+                    }
+
+                    if (elementoPrecoCheio) { 
+                        precoCheio = elementoPrecoCheio.innerText.trim();
+                    }
+
+                    if (preco || precoCheio) {
+                        var kindle = {};
+                        kindle['preco'] = preco;
+                        kindle['precoCheio'] = precoCheio;
+                        return kindle
+                    } else {
+                        return undefined;
+                    }
+                }
+            }, quadroSelector);
+
+            if (!preco) {
+                quadroSelector = '#addToCart';
+                preco = await this.page.evaluate(quadroSelector => {
+                    const quadro = document.querySelector(quadroSelector);
+                    if (quadro) {
+                        var preco = undefined;
+                        var precoCheio = undefined;
+
+                        const elementoPreco = quadro.querySelector('#price');
+                        const elementoPrecoCheio = quadro.querySelector('#listPrice');
+                        
+                        if (elementoPreco) { 
+                            preco = elementoPreco.innerText.trim(); 
+                        }
+
+                        if (elementoPrecoCheio) { 
+                            precoCheio = elementoPrecoCheio.innerText.trim();
+                        }
+
+                        if (preco || precoCheio) {
+                            var produto = {}
+                            produto['preco'] = preco;
+                            produto['precoCheio'] = precoCheio;
+                            return produto;
+                        } else {
+                            return undefined;
+                        }
+                    }
+                }, quadroSelector);
+                
+                if (!preco) {
+                    quadroSelector = '#corePriceDisplay_desktop_feature_div';
+                    preco = await this.page.evaluate(quadroSelector => {
+                        const quadro = document.querySelector(quadroSelector);
+                        if (quadro) {
+                            var preco = undefined;
+                            var precoCheio = undefined;
+
+                            var elementoPreco = quadro.querySelector('.priceToPay');
+                            if (elementoPreco) {
+                                elementoPreco = elementoPreco.querySelector('.a-offscreen');
+                            }
+
+                            var elementoPrecoCheio = quadro.querySelector('.basisPrice');
+                            if (elementoPrecoCheio) {
+                                elementoPrecoCheio = elementoPrecoCheio.querySelector('.a-offscreen');
+                            }
+                            
+                            if (elementoPreco) { 
+                                preco = elementoPreco.innerText.trim(); 
+                            }
+
+                            if (elementoPrecoCheio) { 
+                                precoCheio = elementoPrecoCheio.innerText.trim();
+                            }
+
+                            if (preco || precoCheio) {
+                                var produto = {}
+                                produto['preco'] = preco;
+                                produto['precoCheio'] = precoCheio;
+                                return produto;
+                            } else {
+                                return undefined;
+                            }
+                        }
+                    }, quadroSelector);
+                }
+            }
+
+            if (preco) {
+                return preco;
+            }
+        } catch (err) {
+            console.log(`Erro ao ler oferta primeday: ${err.message}`);
+        }
+
+        return undefined;
+    }
+
     async getPromocao() {
         try {
             var promocao = "";
-            var precoCheio = "";
-            var preco = "";
 
-            console.log('checando promocoes')
             const promoMessageSelector = '#promoPriceBlockMessage_feature_div';
             promocao = await this.page.evaluate(promoMessageSelector => {
                 var promoMessage = document.querySelector(promoMessageSelector);
@@ -191,44 +298,11 @@ class Browser {
                 }
             }, promoMessageSelector);
 
-            console.log('check promo: antes de pegar o preco cheio')
-            const caixaComprasSelector = '#addToCart';
-            precoCheio = await this.page.evaluate(caixaComprasSelector => {
-                var elementoPromo = document.querySelector(caixaComprasSelector);
-                if (elementoPromo) {
-                    elementoPromo = elementoPromo.querySelector('#listPrice');
-                    if (elementoPromo) {
-                        return elementoPromo.innerText.trim();
-                    }
-                }
-                return "";
-            }, caixaComprasSelector);
-
-            console.log('check promo: antes de pegar o preco')
-            preco = await this.page.evaluate(caixaComprasSelector => {
-                var elementoPromo = document.querySelector(caixaComprasSelector);
-                if (elementoPromo) {
-                    elementoPromo = elementoPromo.querySelector('#price');
-                    if (elementoPromo) {
-                        return elementoPromo.innerText.trim();
-                    }
-                }
-                return "";
-            }, caixaComprasSelector);
-
-            if (preco == undefined) {
-                preco = "";
-            }
-
-            if (precoCheio == undefined) {
-                precoCheio = preco;
-            }
-
             if (promocao == undefined) {
                 promocao = "";
             }
 
-            return [promocao, preco, precoCheio];
+            return promocao;
         } catch (err) {
             console.log(`Erro ao ler promocao: ${err.message}`);
             return '';
@@ -303,10 +377,7 @@ class Browser {
             var texto = "";
             var label = "";
             var link = "";
-            var precoCheio = "";
-            var preco = "";
 
-            console.log('check promo: antes de pegar o texto')
             const promoSelector = '[id*="promoMessageCXCWpctch"]';
             texto = await this.page.evaluate(promoSelector => {
                 var elementoPromo = document.querySelector(promoSelector);
@@ -324,7 +395,6 @@ class Browser {
                 }
             }, labelSelector);
 
-            console.log('check promo: antes de pegar o link')
             link = await this.page.evaluate(labelSelector => {
                 var elementoPromo = document.querySelector(labelSelector);
                 if (elementoPromo) {
@@ -337,10 +407,6 @@ class Browser {
                 }
                 return "";
             }, labelSelector);
-
-            console.log('texto: ' + texto);
-            console.log('link: ' + link);
-            console.log('label: ' + label);
 
             if (label === undefined) {
                 label = "";
@@ -356,42 +422,7 @@ class Browser {
                 link = "";
             }
 
-            console.log('check promo: antes de pegar o preco cheio')
-            const caixaComprasSelector = '#addToCart';
-            precoCheio = await this.page.evaluate(caixaComprasSelector => {
-                var elementoPromo = document.querySelector(caixaComprasSelector);
-                if (elementoPromo) {
-                    elementoPromo = elementoPromo.querySelector('#listPrice');
-                    if (elementoPromo) {
-                        return elementoPromo.innerText.trim();
-                    }
-                }
-                return "";
-            }, caixaComprasSelector);
-
-            console.log('check promo: antes de pegar o preco')
-            preco = await this.page.evaluate(caixaComprasSelector => {
-                var elementoPromo = document.querySelector(caixaComprasSelector);
-                if (elementoPromo) {
-                    elementoPromo = elementoPromo.querySelector('#price');
-                    if (elementoPromo) {
-                        return elementoPromo.innerText.trim();
-                    }
-                }
-                return "";
-            }, caixaComprasSelector);
-
-            console.log('precoCheio: ' + precoCheio)
-            console.log('preco: ' + preco)
-            if (preco == undefined) {
-                preco = "";
-            }
-
-            if (precoCheio == undefined) {
-                precoCheio = preco;
-            }
-
-            return [texto, link, preco, precoCheio];
+            return [texto, link];
         } catch (err) {
             console.log(`Erro ao ler promocao: ${err.message}`);
             return ['', ''];
