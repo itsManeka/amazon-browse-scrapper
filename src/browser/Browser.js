@@ -172,8 +172,32 @@ class Browser {
     }
 
     async getPrecoProduto() {
+        var vendedor = '';
+
         try {
-            var quadroSelector = ""; 
+            var quadroSelector = "";
+
+            quadroSelector = '#sellerProfileTriggerId';
+            vendedor = await this.page.evaluate(quadroSelector => {
+                var elemento = document.querySelector(quadroSelector);
+                if (elemento) {
+                    return elemento.href.trim();
+                }
+            }, quadroSelector);
+
+            if ((vendedor === undefined) || (vendedor === null)) {
+                quadroSelector = 'div[offer-display-feature-name="desktop-merchant-info"][class="offer-display-feature-text"]';
+                vendedor = await this.page.evaluate(quadroSelector => {
+                    var elemento = document.querySelector(quadroSelector);
+                    if (elemento) {
+                        return elemento.innerText.trim().toUpperCase();
+                    }
+                }, quadroSelector);
+
+                if (vendedor == "AMAZON.COM.BR") {
+                    vendedor = "seller=A1ZZFT5FULY4LN&";
+                }
+            }
             
             quadroSelector = '#Ebooks-desktop-KINDLE_ALC-prices';
             var preco = await this.page.evaluate(quadroSelector => {
@@ -274,41 +298,143 @@ class Browser {
             }
 
             if (preco) {
+                preco['vendedor'] = vendedor;
                 return preco;
             }
         } catch (err) {
             console.log(`Erro ao ler oferta primeday: ${err.message}`);
+            return undefined;
         }
 
         return undefined;
     }
 
     async getPromocao() {
+        var retorno = {};
+
+        try {
+            var encontrou = false;
+
+            var promocaoNormal = await this.getPromocaoNormal();
+            if (promocaoNormal) {
+                retorno['promocaoNormal'] = promocaoNormal;
+                encontrou = true;
+            }
+
+            var promocaoAplicavel = await this.getPromocaoAplicavel();
+            if (promocaoAplicavel) {
+                retorno['promocaoAplicavel'] = promocaoAplicavel;
+                encontrou = true;
+            }
+
+            if (!encontrou) {
+                retorno = undefined;
+            }
+
+            return retorno;
+        } catch (err) {
+            console.log(`Erro get promocao: ${err.message}`);
+        }
+
+        return undefined;
+    }
+
+    async getPromocaoNormal() {
+        var retorno = {};
+
         try {
             var promocao = "";
+            var link = "";
 
-            const promoMessageSelector = '#promoPriceBlockMessage_feature_div';
-            promocao = await this.page.evaluate(promoMessageSelector => {
-                var promoMessage = document.querySelector(promoMessageSelector);
+            var selector = "";
+
+            selector = '#promoPriceBlockMessage_feature_div';
+            promocao = await this.page.evaluate(selector => {
+                var promoMessage = document.querySelector(selector);
                 if (promoMessage) {
                     var promoContent = promoMessage.querySelector('.a-alert-content');
                     if (promoContent) {
                         return promoContent.textContent.trim();
                     }
                 }
-            }, promoMessageSelector);
+            }, selector);
 
-            if (promocao == undefined) {
-                promocao = "";
+            selector = '#promoPriceBlockMessage_feature_div';
+            link = await this.page.evaluate(selector => {
+                var link = document.querySelector(selector);
+                if (link) {
+                    var link = link.querySelector('#emphasisLink');
+                    if (link) {
+                        return link.href.trim();
+                    }
+                }
+            }, selector);
+
+            if ((promocao !== undefined) || (promocao !== null)) {
+                retorno['valor'] = promocao;
+
+                if ((link !== undefined) || (link !== null)) {
+                    retorno['link'] = link;
+                }
+            } else {
+                retorno = undefined;
             }
 
-            return promocao;
+            return retorno;
         } catch (err) {
-            console.log(`Erro ao ler promocao: ${err.message}`);
-            return '';
+            console.log(`Erro ao ler promocao normal: ${err.message}`);
         }
 
-        return '';
+        return undefined;
+    }
+
+    async getPromocaoAplicavel() {
+        var retorno = {}
+
+        try {
+            var promocao = "";
+            var link = "";
+
+            var selector = "";
+
+            selector = '#applicablePromotionList_feature_div';
+            promocao = await this.page.evaluate(selector => {
+                var promoMessage = document.querySelector(selector);
+                if (promoMessage) {
+                    var promoContent = promoMessage.querySelector('.a-alert-content');
+                    if (promoContent) {
+                        return promoContent.textContent.trim();
+                    }
+                }
+            }, selector);
+
+            selector = '#applicablePromotionList_feature_div';
+            link = await this.page.evaluate(selector => {
+                var link = document.querySelector(selector);
+                if (link) {
+                    var link = link.querySelector('.a-link-normal');
+                    if (link) {
+                        return link.href.trim();
+                    }
+                }
+            }, selector);
+
+            if ((promocao !== undefined) || (promocao !== null)) {
+                retorno['valor'] = promocao;
+
+                if ((link !== undefined) || (link !== null)) {
+                    retorno['link'] = link;
+                }
+            } else {
+                retorno = undefined;
+            }
+
+            return retorno;
+        } catch (err) {
+            console.log(`Erro ao ler promocao aplicavel: ${err.message}`);
+        }
+
+        return undefined;
     }
 
     async getCupomDesconto() {

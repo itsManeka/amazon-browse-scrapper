@@ -2,6 +2,7 @@ const Browser = require('../browser/Browser');
 
 const browser = new Browser();
 
+var reVendedor = new RegExp('seller=([a-zA-Z0-9]+)&');
 var reValorReais = new RegExp('R\\$([0-9,.]+)');
 var reNomeCupom = new RegExp(': ([a-zA-Z0-9]+)[ ]');
 var reNomeCupom2 = new RegExp('código ([a-zA-Z0-9]+)[ ]');
@@ -57,9 +58,6 @@ module.exports = {
 
         console.log(`busca cupom destacavel`);
         retorno['destacavel'] = await this.getCupomDescontoDestacavel();
-
-        console.log('busca promocoes');
-        retorno['promocoes'] = await this.getPromo();
 
         console.log(`retorno`);
         return retorno;
@@ -164,6 +162,7 @@ module.exports = {
 
     async getPrecos() {
         var retorno = {};
+        var encontrou = false;
 
         try {
             var data = await browser.getPrecoProduto();
@@ -174,20 +173,34 @@ module.exports = {
                     result = this.trataValor(data.preco);
                     if (result) {
                         retorno['preco'] = result;
+                        encontrou = true;
                     }
                 }
                 if (data.precoCheio) {
                     result = this.trataValor(data.precoCheio);
                     if (result) {
                         retorno['precoCheio'] = result;
+                        encontrou = true;
                     }
                 }
+                if (data.vendedor) {
+                    result = data.vendedor.match(reVendedor);
+                    if (result) {
+                        retorno['vendedor'] = result[1];
+                    }
+                }
+                if (encontrou) {
+                    return retorno;
+                }
+            } else {
+                retorno = undefined;
             }
         } catch (err) {
             console.log(`erro ao ler preços: ${err.message}`);
+            retorno = undefined;
         }
 
-        return retorno;
+        return undefined;
     },
 
     async getOfertaRelampago() {
@@ -226,29 +239,79 @@ module.exports = {
         return retorno;
     },
 
+    lePromocao(promocao) {
+        var retorno = {};
+
+        var valor = "";
+        var link = "";
+
+        var encontrouPromo = false;
+
+        try {
+            if (promocao['valor'] !== undefined) {
+                valor = promocao['valor'];
+            }
+            
+            if (promocao['link'] !== undefined) {
+                link = promocao['link'];
+            }
+            
+            var result = valor.match(reValPromocaoSite);
+            if (result) {
+                retorno['val'] = parseFloat(result[1].replace(',', '.'));
+                encontrouPromo = true;
+            }
+            
+            var result = valor.match(aplPctPromocaoSite);
+            if (result) {
+                retorno['pct'] = parseFloat(result[1].replace(',', '.'));
+                encontrouPromo = true;
+            }
+
+            if (encontrouPromo) {
+                retorno['link'] = link;
+            } else {
+                retorno = undefined;
+            }
+        } catch (err) {
+            console.log(`erro ao ler promocao: ${err.message}`);
+        }
+
+        return retorno;
+    },
+
     async getPromocao() {
-        const retorno = {}
+        var retorno = {};
+
+        var encontrouPromo = false;
 
         try {
             const promocaoSite = await browser.getPromocao();
 
-            var promocao = "";
-
             if (promocaoSite) {
-                promocao = promocaoSite;
+                if (promocaoSite['promocaoNormal'] !== undefined) {
+                    const promocaoLida = this.lePromocao(promocaoSite['promocaoNormal']);
+                    if (promocaoLida) {
+                        retorno['promocaoNormal'] = promocaoLida;
+                        encontrouPromo = true;
+                    }
+                }
+
+                if (promocaoSite['promocaoAplicavel'] !== undefined) {
+                    const promocaoLida = this.lePromocao(promocaoSite['promocaoAplicavel']);
+                    if (promocaoLida) {
+                        retorno['promocaoAplicavel'] = promocaoLida;
+                        encontrouPromo = true;
+                    }
+                }
             }
-            
-            var result = promocao.match(reValPromocaoSite);
-            if (result) {
-                retorno['val'] = parseFloat(result[1].replace(',', '.'));
-            }
-            
-            var result = promocao.match(aplPctPromocaoSite);
-            if (result) {
-                retorno['pct'] = parseFloat(result[1].replace(',', '.'));
+
+            if (!encontrouPromo) {
+                retorno = undefined;
             }
         } catch (err) {
             console.log(`erro ao ler promocao: ${err.message}`);
+            retorno = undefined;
         }
 
         return retorno;
@@ -320,33 +383,4 @@ module.exports = {
 
         return retorno;
     },
-
-    async getPromo() {
-        const retorno = {}
-
-        try {
-            const promocao = await browser.checkPromo();
-
-            var texto = "";
-            var link = "";
-
-            if (promocao) {
-                texto = promocao[0];
-                link = promocao[1];
-            }
-
-            if (texto != "") {
-                retorno['texto'] = texto;
-            }
-
-            if (link != "") {
-                retorno['link'] = link;
-            }
-            
-            return retorno;
-        } catch (err) {
-            console.log(`erro ao ler promocoes: ${err.message}`);
-        }
-    }
-
 }
