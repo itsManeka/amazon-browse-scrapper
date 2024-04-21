@@ -7,6 +7,10 @@ class Browser {
         this.page = null;
     }
 
+    async delay(ms) {
+        return new Promise(resolve=>setTimeout(resolve, ms))
+    }
+
     async getPage() {
         return this.page;
     }
@@ -439,13 +443,26 @@ class Browser {
 
     async getCupomDesconto() {
         try {
-            var retorno = "";
+            var retorno = {};
 
             const cupomListSelector = 'span[id*="promoMessageCXCWpctch"]';
             var cupom = await this.page.evaluate(cupomListSelector => {
+                var texto;
+                var link;
+
                 var cupomMessage = document.querySelector(cupomListSelector);
                 if (cupomMessage) {
-                    return cupomMessage.innerText.trim();
+                    texto = cupomMessage.innerText.trim();
+
+                    var linkelement = cupomMessage.querySelector('#emphasisLink');
+                    if (linkelement) {
+                        link = linkelement.href.trim();
+                    }
+
+                    var cp = {};
+                    cp['texto'] = texto;
+                    cp['link'] = link;
+                    return cp;
                 }
             }, cupomListSelector);
 
@@ -458,11 +475,11 @@ class Browser {
             }, labelSelector);
 
             if (cupom != "" && cupom != undefined) {
-                retorno = cupom;
+                retorno['texto'] = cupom.texto;
+                retorno['link'] = cupom.link;
 
                 if (label != "" && label != undefined) {
-                    retorno = `${label}${retorno}`;
-                    console.log('retorno: ' + retorno);
+                    retorno['texto'] = `${label}${cupom.texto}`;
                 }
 
                 return retorno;
@@ -553,6 +570,127 @@ class Browser {
             console.log(`Erro ao ler promocao: ${err.message}`);
             return ['', ''];
         }
+    }
+
+    async getValidadeCupom() {
+        try {
+            const validadeSelector = '#promotionSchedule';
+            const validade = await this.page.evaluate(validadeSelector => {
+                var label = document.querySelector(validadeSelector);
+                if (label) {
+                    return label.textContent.trim();
+                }
+
+                return undefined;
+            }, validadeSelector);
+
+            return validade;
+        } catch (e) {
+            console.log(`Erro ao ler validade cupom: ${err.message}`);
+        }
+
+        return undefined; 
+    }
+
+    async aguardaItensCupomCarregarem(selector, timeout = 25000) {
+        var qtd = 1;
+        var retorno = 0;
+        var carregou = false;
+        var startTime = Date.now();
+
+        try {
+            do {  
+                await this.delay(5000);
+
+                retorno = await this.page.evaluate((selector, qtd) => {
+                    var retorno = {};
+
+                    retorno.arg1 = selector;
+                    retorno.arg2 = qtd;
+
+                    var el = document.querySelectorAll(selector);
+                    if (el) {
+                        if (el.length > qtd) {
+                            var container = document.querySelector('#showMoreBtnContainer');
+
+                            if (container && !container.classList.contains('hidden')) {
+                                var botao = document.querySelector('#showMore');
+                                if (botao) {
+                                    botao.click();
+
+                                    retorno.codigo = 1;
+                                    retorno.qtd = el.length;
+
+                                    return retorno;
+                                }
+                            }
+
+                            retorno.codigo = 0;
+                            retorno.qtd = el.length;
+
+                            return retorno;
+                        } else {
+                            retorno.codigo = -1;
+
+                            return retorno;
+                        }
+                    }
+
+                    retorno.codigo = -2;
+
+                    return retorno;
+                }, selector, qtd);
+
+                switch (retorno.codigo) {
+                    case 1:
+                        qtd = retorno.qtd;
+                        startTime = Date.now();
+                        break;
+
+                    case 0:
+                        qtd = retorno.qtd;
+                        carregou = true;
+                        break;
+                }
+
+                if (Date.now() - startTime >= timeout) {
+                    console.log('timeout aguardando cupom carregar');
+                    return;
+                }
+            } while (!carregou)
+        } catch (e) {
+            console.log('erro aguardando cupom carregar: ' + e.message);
+        }
+
+        return;
+    }
+
+    async buscaItensCupom() {
+        var data = [];
+
+        try {
+            const quadroSelector = 'li[name="productGrid"]';
+            await this.page.waitForSelector(quadroSelector);
+
+            await this.aguardaItensCupomCarregarem(quadroSelector);
+
+            data = await this.page.evaluate(quadroSelector => {
+                var ids = [];
+
+                const elements = document.querySelectorAll(quadroSelector)
+                elements.forEach(element => {
+                    var id = element.getAttribute("data-asin");
+                    if (id !== undefined && id !== null && id !== '') {
+                        ids.push(id);
+                    }
+                });
+                return ids;                
+            }, quadroSelector);
+        } catch (e) {
+            console.log('Erro buscando links cupom: ' + e.message);
+        }
+
+        return data;
     }
 }
 

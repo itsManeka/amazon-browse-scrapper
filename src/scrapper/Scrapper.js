@@ -13,10 +13,20 @@ var reValCupomAplicavel = new RegExp('Aplicar Cupom de R\\$([0-9,]+)');
 var reValPromocaoSite = new RegExp('R\\$[^0-9]([0-9,]+)');
 var aplPctPromocaoSite = new RegExp(' ([0-9,]+)%');
 var reCodigoProduto = new RegExp('\\/([a-zA-Z0-9]+)\\?');
+var reDataValidadeCupom = new RegExp('([1-9]+) de ([a-zA-Z]+) [\\S\\s]+ ([1-9]+) de ([a-zA-Z]+)');
 
 var inicializado = false;
-var ofertas = [];
+var ofertas = {};
+ofertas.sucesso = false;
+ofertas.codigo = -1;
+ofertas.mensagem = '';
 var buscaConcluida = true;
+
+var cupom = {};
+cupom.sucesso = false;
+cupom.codigo = -1;
+cupom.mensagem = '';
+var buscaCupomConcluida = false;
 
 const delay=(ms)=>new Promise(resolve=>setTimeout(resolve,ms));
 
@@ -38,28 +48,15 @@ module.exports = {
     },
 
     async getData() {
-        console.log(`getData - inicio`);
         const retorno = {};
 
-        console.log(`busca preço`);
         retorno['preco'] = await this.getPrecos();
-        
-        console.log(`busca oferta relampago`);
         retorno['relampago'] = await this.getOfertaRelampago();
-
-        console.log(`busca oferta primeday`);
         retorno['primeday'] = await this.getOfertaPrimeDay();
-        
-        console.log(`busca desconto tela pagamento`);
         retorno['promocao'] = await this.getPromocao();
-
-        console.log(`busca cupom`);
         retorno['cupom'] = await this.getCupomDesconto();
-
-        console.log(`busca cupom destacavel`);
         retorno['destacavel'] = await this.getCupomDescontoDestacavel();
 
-        console.log(`retorno`);
         return retorno;
     },
 
@@ -69,7 +66,7 @@ module.exports = {
             links = links.concat(data.links);
             if (data.continua) {
                 if (temMaisPagina) {
-                    temManavegaPaginasisPagina = await browser.proximaPaginaRelampago();
+                    temMaisPagina = await browser.proximaPaginaRelampago();
                     links = await this.navegaPaginas(links, temMaisPagina);
                 }
             }
@@ -104,7 +101,6 @@ module.exports = {
         var links = [];
         
         try {
-  
             if (!inicializado) {
                 await browser.init();
                 inicializado = true;
@@ -117,24 +113,28 @@ module.exports = {
             if (navegou) {
                 links = await this.navegaPaginas(links, true);
             
-                ofertas = [];
+                ofertas.ofertas = [];
 
                 for (const link of links) {
                     result = await this.buscaOfertasRelampagoLink(link);
                     if (result !== undefined) {
-                        ofertas.push(result);
+                        ofertas.ofertas.push(result);
                     } else {
                         // tenta de novo (?) o aws da umas loqueada sei la
                         delay(500);
                         result = await this.buscaOfertasRelampagoLink(link);
                         if (result !== undefined) {
-                            ofertas.push(result);
+                            ofertas.ofertas.push(result);
                         }   
                     }
                 }
             }
+            
+            ofertas.sucesso = true
         } catch (err) {
             console.log('erro navegando para os links das ofertas relâmpago: ' + err.message);
+            ofertas.codigo = err.code;
+            ofertas.mensagem = err.message;
         }
     
         buscaConcluida = true;
@@ -321,33 +321,35 @@ module.exports = {
         const retorno = {}
 
         try {
-            const cupomDesconto = await browser.getCupomDesconto();
-            
-            var result = cupomDesconto.match(reNomeCupom);
+            const cupom = await browser.getCupomDesconto();
+            const texto = cupom.texto;
+            retorno['link'] = cupom.link;
+
+            var result = texto.match(reNomeCupom);
             if (result) {
                 retorno['nome'] = result[1];
             } else {
-                result = cupomDesconto.match(reNomeCupom2);
+                result = texto.match(reNomeCupom2);
                 if (result) {
                     retorno['nome'] = result[1];
                 }
             }
             
-            var result = cupomDesconto.match(reValorCupom);
+            var result = texto.match(reValorCupom);
             if (result) {
                 retorno['val'] = parseFloat(result[1].replace(',', '.'));
             } else {
-                result = cupomDesconto.match(reValPromocaoSite);
+                result = texto.match(reValPromocaoSite);
                 if (result) {
                     retorno['val'] = parseFloat(result[1].replace(',', '.'));
                 }
             }
             
-            var result = cupomDesconto.match(rePctCupom);
+            var result = texto.match(rePctCupom);
             if (result) {
                 retorno['pct'] = parseFloat(result[1].replace(',', '.'));
             } else {
-                result = cupomDesconto.match(aplPctPromocaoSite);
+                result = texto.match(aplPctPromocaoSite);
                 if (result) {
                     retorno['pct'] = result[1];
                 }
@@ -364,7 +366,7 @@ module.exports = {
 
         try {
             const cupomDesconto = await browser.getCupomDescontoDestacavel();
-            console.log(cupomDesconto);
+            
             var result = cupomDesconto.match(reValCupomAplicavel);
             if (result) {
                 retorno['val'] = parseFloat(result[1].replace(',', '.'));
@@ -373,7 +375,6 @@ module.exports = {
             
             var result = cupomDesconto.match(rePctCupomAplicavel);
             if (result) {
-                console.log("deu match")
                 retorno['pct'] = parseFloat(result[1].replace(',', '.'));
                 retorno['nome'] = '[DESTACAVEL]';
             }
@@ -382,5 +383,92 @@ module.exports = {
         }
 
         return retorno;
+    },
+
+    getData(dia, mes) {
+        const dataAtual = new Date();
+        const anoAtual = dataAtual.getFullYear();
+
+        const meses = {
+            janeiro: 0,
+            fevereiro: 1,
+            março: 2,
+            abril: 3,
+            maio: 4,
+            junho: 5,
+            julho: 6,
+            agosto: 7,
+            setembro: 8,
+            outubro: 9,
+            novembro: 10,
+            dezembro: 11,
+        };
+
+        if (meses.hasOwnProperty(mes.toLowerCase())) {
+            const data = new Date(anoAtual, meses[mes.toLowerCase()], dia);
+            return data;
+        }
+
+        return undefined;
+    },
+    
+    async buscarItensCupom(url) {
+        buscaCupomConcluida = false;
+
+        var validadeFim;
+        var validadeInicio;
+
+        var produtos = [];
+        
+        try {
+            if (!inicializado) {
+                await browser.init();
+                inicializado = true;
+            }
+            
+            await browser.navigate(url);
+          
+            const textoValidade = await browser.getValidadeCupom();
+
+            if (textoValidade !== undefined && textoValidade !== null && textoValidade !== '') {
+                var validade = textoValidade.match(reDataValidadeCupom);
+                if (validade && validade.length === 5) {
+                    const diaInicio = validade[1];
+                    const mesInicio = validade[2];
+                    const diaFim = validade[3];
+                    const mesFim = validade[4];
+
+                    validadeInicio = this.getData(diaInicio, mesInicio);
+                    validadeFim = this.getData(diaFim, mesFim);
+                }
+
+                if (validadeInicio && validadeFim) {
+                    produtos = await browser.buscaItensCupom();
+                    console.log(`qtd: ${produtos.length}`);
+                    if (produtos) {
+                        cupom.sucesso = true;
+                        cupom.produtos = produtos;
+                        cupom.inicio = validadeInicio;
+                        cupom.fim = validadeFim;
+                    }
+                }
+            }
+        } catch (err) {
+            console.log('erro navegando para buscar itens cupons: ' + err.message);
+            cupom.codigo = err.code;
+            cupom.mensagem = err.message;
+        }
+    
+        buscaCupomConcluida = true;
+        inicializado = false;
+        await browser.finaliza();
+    },
+
+    async getDataCupons() {
+        return cupom;
+    },
+    
+    async isBuscaCupomConcluida() {
+        return buscaCupomConcluida;
     },
 }
