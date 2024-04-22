@@ -385,7 +385,7 @@ module.exports = {
         return retorno;
     },
 
-    getData(dia, mes) {
+    montaData(dia, mes) {
         const dataAtual = new Date();
         const anoAtual = dataAtual.getFullYear();
 
@@ -438,8 +438,8 @@ module.exports = {
                     const diaFim = validade[3];
                     const mesFim = validade[4];
 
-                    validadeInicio = this.getData(diaInicio, mesInicio);
-                    validadeFim = this.getData(diaFim, mesFim);
+                    validadeInicio = this.montaData(diaInicio, mesInicio);
+                    validadeFim = this.montaData(diaFim, mesFim);
                 }
 
                 if (validadeInicio && validadeFim) {
