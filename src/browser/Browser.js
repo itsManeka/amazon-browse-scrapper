@@ -442,9 +442,9 @@ class Browser {
     }
 
     async getCupomDesconto() {
-        try {
-            var retorno = {};
+        var retorno = {};
 
+        try {
             const cupomListSelector = 'span[id*="promoMessageCXCWpctch"]';
             var cupom = await this.page.evaluate(cupomListSelector => {
                 var texto;
@@ -487,10 +487,10 @@ class Browser {
 
         } catch (err) {
             console.log(`Erro ao ler cupom desconto: ${err.message}`);
-            return '';
+            return retorno;
         }
 
-        return '';
+        return retorno;
     }
 
     async getCupomDescontoDestacavel() {

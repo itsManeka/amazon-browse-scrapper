@@ -325,33 +325,35 @@ module.exports = {
             const texto = cupom.texto;
             retorno['link'] = cupom.link;
 
-            var result = texto.match(reNomeCupom);
-            if (result) {
-                retorno['nome'] = result[1];
-            } else {
-                result = texto.match(reNomeCupom2);
+            if (texto) {
+                var result = texto.match(reNomeCupom);
                 if (result) {
                     retorno['nome'] = result[1];
+                } else {
+                    result = texto.match(reNomeCupom2);
+                    if (result) {
+                        retorno['nome'] = result[1];
+                    }
                 }
-            }
-            
-            var result = texto.match(reValorCupom);
-            if (result) {
-                retorno['val'] = parseFloat(result[1].replace(',', '.'));
-            } else {
-                result = texto.match(reValPromocaoSite);
+                
+                var result = texto.match(reValorCupom);
                 if (result) {
                     retorno['val'] = parseFloat(result[1].replace(',', '.'));
+                } else {
+                    result = texto.match(reValPromocaoSite);
+                    if (result) {
+                        retorno['val'] = parseFloat(result[1].replace(',', '.'));
+                    }
                 }
-            }
-            
-            var result = texto.match(rePctCupom);
-            if (result) {
-                retorno['pct'] = parseFloat(result[1].replace(',', '.'));
-            } else {
-                result = texto.match(aplPctPromocaoSite);
+                
+                var result = texto.match(rePctCupom);
                 if (result) {
-                    retorno['pct'] = result[1];
+                    retorno['pct'] = parseFloat(result[1].replace(',', '.'));
+                } else {
+                    result = texto.match(aplPctPromocaoSite);
+                    if (result) {
+                        retorno['pct'] = result[1];
+                    }
                 }
             }
         } catch (err) {
@@ -456,11 +458,12 @@ module.exports = {
         } catch (err) {
             console.log('erro navegando para buscar itens cupons: ' + err.message);
             cupom.codigo = err.code;
-            cupom.mensagem = err.message;
+            cupom.mensagem = err.message; 
         }
     
         buscaCupomConcluida = true;
         inicializado = false;
+
         await browser.finaliza();
     },
 
