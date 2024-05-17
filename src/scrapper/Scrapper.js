@@ -13,7 +13,7 @@ var reValCupomAplicavel = new RegExp('Aplicar Cupom de R\\$([0-9,]+)');
 var reValPromocaoSite = new RegExp('R\\$[^0-9]([0-9,]+)');
 var aplPctPromocaoSite = new RegExp(' ([0-9,]+)%');
 var reCodigoProduto = new RegExp('\\/([a-zA-Z0-9]+)\\?');
-var reDataValidadeCupom = new RegExp('([1-9]+) de ([a-zA-Z]+) [\\S\\s]+ ([1-9]+) de ([a-zA-Z]+)');
+var reDataValidadeCupom = new RegExp('([0-9]+) de ([a-zA-Z]+) [\\S\\s]+ ([0-9]+) de ([a-zA-Z]+)');
 
 var inicializado = false;
 var ofertas = {};
@@ -429,7 +429,7 @@ module.exports = {
             }
             
             await browser.navigate(url);
-          
+            
             const textoValidade = await browser.getValidadeCupom();
 
             if (textoValidade !== undefined && textoValidade !== null && textoValidade !== '') {
