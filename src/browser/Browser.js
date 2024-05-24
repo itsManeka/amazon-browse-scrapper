@@ -16,7 +16,7 @@ class Browser {
     }
 
     async init() {
-        this.browser = await puppeteer.launch();
+        this.browser = await puppeteer.launch(/*{headless: false}*/);
         this.context = await this.browser.createIncognitoBrowserContext();
         this.page = await this.context.newPage();
     }
@@ -691,6 +691,65 @@ class Browser {
         }
 
         return data;
+    }
+
+    async aguardaCarregarPreVendas() {
+        try {
+            const selector = 'div[data-asin]:not([data-asin=""])';
+            await this.page.waitForSelector(selector);
+
+            return true;
+        } catch (e) {
+            console.log('erro navegando para ofertas relâmpago: ' + e.message);
+        }
+
+        return false;
+    }
+
+    async buscaProdutosPreVendas() {
+        var produtos;
+
+        try {
+            const selector = 'div[data-asin]:not([data-asin=""])';
+            await this.page.waitForSelector(selector);
+            produtos = await this.page.evaluate(selector => {
+                var produtos = [];
+
+                document.querySelectorAll(selector).forEach(element => {
+                    var att = element.getAttribute("data-asin");
+                    if (att) {
+                        produtos.push(att);
+                    }
+                });
+                return produtos;                
+            }, selector);
+        } catch (e) {
+            console.log('Erro buscando produtos pre venda: ' + e.message);
+        }
+
+        return produtos;
+    }
+
+    async proximaPaginaPreVenda() {
+        try {
+            const proximaPagina = await Promise.race([
+                this.page.waitForSelector('a[class*="s-pagination-next"]'),
+                this.page.waitForSelector('span[class*="s-pagination-next"]'),
+            ]);
+            if (proximaPagina) {
+                const tagName = await this.page.evaluate(element => element.tagName, proximaPagina);
+                if (tagName.toUpperCase() === 'A') {
+                    await proximaPagina.click();
+                    await this.delay(20000);
+                    await this.aguardaCarregarPreVendas();
+                    return true;
+                } 
+            }
+        } catch (e) {
+            console.log('erro navegando para próxima página pre venda: ' + e.message);
+        }
+
+        return false;
     }
 }
 

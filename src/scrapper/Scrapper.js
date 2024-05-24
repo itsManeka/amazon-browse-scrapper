@@ -28,6 +28,12 @@ cupom.codigo = -1;
 cupom.mensagem = '';
 var buscaCupomConcluida = false;
 
+var prevendas = {};
+prevendas.sucesso = false;
+prevendas.codigo = -1;
+prevendas.mensagem = '';
+var buscaPreVendaConcluida = false;
+
 const delay=(ms)=>new Promise(resolve=>setTimeout(resolve,ms));
 
 module.exports = {
@@ -473,5 +479,57 @@ module.exports = {
     
     async isBuscaCupomConcluida() {
         return buscaCupomConcluida;
+    },
+
+    async navegaPaginasPreVendas(produtos, temMaisPagina=true) {
+        var produtosEncontrados = await browser.buscaProdutosPreVendas();
+        if (produtosEncontrados) {
+            produtos = produtos.concat(produtosEncontrados);
+            if (temMaisPagina) {
+                temMaisPagina = await browser.proximaPaginaPreVenda();
+                produtos = await this.navegaPaginasPreVendas(produtos, temMaisPagina);
+            }
+        }
+        return produtos;
+    },
+
+    async buscaPreVendas() {
+        buscaPreVendaConcluida = false;
+
+        var produtos = [];
+        
+        try {
+            if (!inicializado) {
+                await browser.init();
+                inicializado = true;
+            }
+            
+            const url = 'https://www.amazon.com.br/HQs-Mang%C3%A1s-e-Graphic-Novels-Pr%C3%A9-venda/s?i=stripbooks&rh=n%3A7842710011%2Cp_n_publication_date%3A5560471011%2Cp_85%3A19171728011&s=date-desc-rank&dc&rnid=19171727011';
+            await browser.navigate(url, {waitUntil: 'domcontentloaded', timeout: 0});
+            
+            const navegou = await browser.aguardaCarregarPreVendas();
+
+            if (navegou) {
+                produtos = await this.navegaPaginasPreVendas(produtos);
+                prevendas.produtos = produtos;
+                prevendas.sucesso = true
+            }
+        } catch (err) {
+            console.log('erro navegando para os produtos das pre vendas: ' + err.message);
+            prevendas.codigo = err.code;
+            prevendas.mensagem = err.message;
+        }
+    
+        buscaPreVendaConcluida = true;
+        inicializado = false;
+        await browser.finaliza();
+    },
+
+    async getDataPreVendas() {
+        return prevendas;
+    },
+    
+    async isBuscaPreVendaConcluida() {
+        return buscaPreVendaConcluida;
     },
 }
