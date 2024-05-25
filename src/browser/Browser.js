@@ -700,7 +700,6 @@ class Browser {
 
             return true;
         } catch (e) {
-            await this.page.screenshot({path: 'example.png', fullPage: true});
             console.log('erro aguardaCarregarPreVendas pré-venda: ' + e.message);
         }
 
@@ -734,8 +733,8 @@ class Browser {
     async proximaPaginaPreVenda() {
         try {
             const proximaPagina = await Promise.race([
-                this.page.waitForSelector('a[class*="s-pagination-next"]'),
-                this.page.waitForSelector('span[class*="s-pagination-next"]'),
+                this.page.waitForSelector('span[class*="s-pagination-next"]', {timeout: 0}),
+                this.page.waitForSelector('a[class*="s-pagination-next"]', {timeout: 0}),
             ]);
             if (proximaPagina) {
                 const tagName = await this.page.evaluate(element => element.tagName, proximaPagina);

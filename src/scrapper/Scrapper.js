@@ -23,7 +23,12 @@ var buscaConcluida = true;
 var cupom = {};
 var buscaCupomConcluida = false;
 
+
+const LIMITE_PAGINACAO = 10;
+
 var prevendas = {};
+var paginaPreVenda = 0;
+var limiteAtual = LIMITE_PAGINACAO;
 var buscaPreVendaConcluida = false;
 
 const delay=(ms)=>new Promise(resolve=>setTimeout(resolve,ms));
@@ -490,7 +495,29 @@ module.exports = {
         return buscaCupomConcluida;
     },
 
+    getURLPreVenda(pagina=undefined) {
+        var url = 'https://www.amazon.com.br/HQs-Mang%C3%A1s-e-Graphic-Novels-Pr%C3%A9-venda/s?i=stripbooks&rh=n%3A7842710011%2Cp_n_publication_date%3A5560471011%2Cp_85%3A19171728011&s=date-desc-rank&dc&rnid=19171727011';
+        if (pagina) {
+            url += `&page=${pagina}`;
+        }
+        return url;
+    },
+
+    async reiniciaBrowser() {
+        await browser.finaliza();
+        await browser.init();
+    },
+
     async navegaPaginasPreVendas(produtos, temMaisPagina=true) {
+        paginaPreVenda ++;
+        if (paginaPreVenda > limiteAtual) {
+            limiteAtual = limiteAtual - 1 + LIMITE_PAGINACAO;
+
+            await this.reiniciaBrowser();
+            const url = this.getURLPreVenda(paginaPreVenda);
+            await browser.navigate(url, {waitUntil: 'domcontentloaded', timeout: 0});
+            await browser.aguardaCarregarPreVendas();
+        }
         var produtosEncontrados = await browser.buscaProdutosPreVendas();
         if (produtosEncontrados) {
             produtos = produtos.concat(produtosEncontrados);
@@ -502,11 +529,37 @@ module.exports = {
         return produtos;
     },
 
+    async iniciaBuscaPreVendas() {
+        var produtos = [];
+
+        try {
+            const url = this.getURLPreVenda();
+            await browser.navigate(url, {waitUntil: 'domcontentloaded', timeout: 0});
+            
+            const navegou = await browser.aguardaCarregarPreVendas();
+
+            if (navegou) {
+                limiteAtual = LIMITE_PAGINACAO;
+
+                produtos = await this.navegaPaginasPreVendas(produtos);
+                prevendas.produtos = produtos;
+                prevendas.sucesso = true
+            }
+        } catch (err) {
+            const message = err.message;
+            console.log('erro iniciaBuscaPreVendas(): ' + message);
+            if (message.includes('timeout')) {
+                await this.iniciaBuscaPreVendas();
+            } else {
+                prevendas.codigo = err.code;
+                prevendas.mensagem = err.message;
+            }
+        }
+    },
+
     async buscaPreVendas() {
         buscaPreVendaConcluida = false;
         prevendas = this.getDadosLimpos();
-
-        var produtos = [];
         
         try {
             if (!inicializado) {
@@ -514,18 +567,9 @@ module.exports = {
                 inicializado = true;
             }
             
-            const url = 'https://www.amazon.com.br/HQs-Mang%C3%A1s-e-Graphic-Novels-Pr%C3%A9-venda/s?i=stripbooks&rh=n%3A7842710011%2Cp_n_publication_date%3A5560471011%2Cp_85%3A19171728011&s=date-desc-rank&dc&rnid=19171727011';
-            await browser.navigate(url, {waitUntil: 'domcontentloaded', timeout: 0});
-            
-            const navegou = await browser.aguardaCarregarPreVendas();
-
-            if (navegou) {
-                produtos = await this.navegaPaginasPreVendas(produtos);
-                prevendas.produtos = produtos;
-                prevendas.sucesso = true
-            }
+            await this.iniciaBuscaPreVendas();
         } catch (err) {
-            console.log('erro navegando para os produtos das pre vendas: ' + err.message);
+            console.log('erro buscaPreVendas(): ' + err.message);
             prevendas.codigo = err.code;
             prevendas.mensagem = err.message;
         }
