@@ -700,7 +700,8 @@ class Browser {
 
             return true;
         } catch (e) {
-            console.log('erro navegando para ofertas relâmpago: ' + e.message);
+            await this.page.screenshot({path: 'example.png', fullPage: true});
+            console.log('erro aguardaCarregarPreVendas pré-venda: ' + e.message);
         }
 
         return false;

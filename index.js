@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const express = require('express');
 const scrapper = require('./src/scrapper/Scrapper');
+scrapper.inicializa();
 
 const app = express();
 

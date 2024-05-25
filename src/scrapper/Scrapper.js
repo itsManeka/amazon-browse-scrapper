@@ -16,27 +16,34 @@ var reCodigoProduto = new RegExp('\\/([a-zA-Z0-9]+)\\?');
 var reDataValidadeCupom = new RegExp('([0-9]+) de ([a-zA-Z]+) [\\S\\s]+ ([0-9]+) de ([a-zA-Z]+)');
 
 var inicializado = false;
+
 var ofertas = {};
-ofertas.sucesso = false;
-ofertas.codigo = -1;
-ofertas.mensagem = '';
 var buscaConcluida = true;
 
 var cupom = {};
-cupom.sucesso = false;
-cupom.codigo = -1;
-cupom.mensagem = '';
 var buscaCupomConcluida = false;
 
 var prevendas = {};
-prevendas.sucesso = false;
-prevendas.codigo = -1;
-prevendas.mensagem = '';
 var buscaPreVendaConcluida = false;
 
 const delay=(ms)=>new Promise(resolve=>setTimeout(resolve,ms));
 
 module.exports = {
+    getDadosLimpos() {
+        var dados = {};
+        dados.sucesso = false;
+        dados.codigo = -1;
+        dados.mensagem = '';
+
+        return dados;
+    },
+
+    inicializa() {
+        cupom = this.getDadosLimpos();
+        ofertas = this.getDadosLimpos();
+        prevendas = this.getDadosLimpos();
+    },
+
     async navegar(url) {    
         if (!inicializado) {
             await browser.init();
@@ -103,6 +110,7 @@ module.exports = {
 
     async buscaOfertasRelampago() {
         buscaConcluida = false;
+        ofertas = this.getDadosLimpos();
 
         var links = [];
         
@@ -422,6 +430,7 @@ module.exports = {
     
     async buscarItensCupom(url) {
         buscaCupomConcluida = false;
+        cupom = this.getDadosLimpos();
 
         var validadeFim;
         var validadeInicio;
@@ -495,6 +504,7 @@ module.exports = {
 
     async buscaPreVendas() {
         buscaPreVendaConcluida = false;
+        prevendas = this.getDadosLimpos();
 
         var produtos = [];
         
