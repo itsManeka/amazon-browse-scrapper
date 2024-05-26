@@ -19,7 +19,6 @@ app.get('/api/data', async function(req, res) {
     const url = decodeURIComponent(req.query.url);
     
     try {
-        console.log(`requisição iniciada`);
         await scrapper.navegar(url);
         const data = await scrapper.getData();
         res.send({
@@ -98,48 +97,6 @@ app.get('/api/buscacupom/results', async function(req, res) {
         const concluida = await scrapper.isBuscaCupomConcluida();
 
         data = await scrapper.getDataCupons();
-        
-        res.send({
-            'concluida': concluida,
-            'data': data
-        });
-    } catch (err) {
-        data.sucesso = false;
-        data.codigo = err.code;
-        data.mensagem = err.message;
-
-        res.send({
-            'concluida': false,
-            'data': data
-        });
-    }
-});
-
-app.get('/api/prevendas/busca', async function(req, res) {
-    const ultimoId = req.query.id;
-
-    try {
-        console.log('busca prevenda iniciada');
-        scrapper.buscaPreVendas(ultimoId);
-        res.send({
-            'data': 1
-        })
-    } catch (err) {
-        res.send({
-            'erro': err.message
-        })
-    }
-});
-
-app.get('/api/prevendas/results', async function(req, res) {
-    var data = {};
-
-    try {
-        console.log('verifica se concluiu pre vendas');
-        
-        const concluida = await scrapper.isBuscaPreVendaConcluida();
-
-        data = await scrapper.getDataPreVendas();
         
         res.send({
             'concluida': concluida,
